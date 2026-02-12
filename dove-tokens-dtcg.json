@@ -1,0 +1,179 @@
+{
+  "dove-colors": {
+    "cream": {
+      "$type": "color",
+      "$value": "#F5F0E8",
+      "$description": "Main background"
+    },
+    "cream-light": {
+      "$type": "color",
+      "$value": "#FAF7F2",
+      "$description": "Light backgrounds, onboarding screens"
+    },
+    "cream-dark": {
+      "$type": "color",
+      "$value": "#E8E0D0",
+      "$description": "Input fields, dividers, borders"
+    },
+    "warm-sand": {
+      "$type": "color",
+      "$value": "#D4C5A9",
+      "$description": "Muted borders, subtle elements"
+    },
+
+    "gold": {
+      "$type": "color",
+      "$value": "#C9A96E",
+      "$description": "Primary accent, highlights"
+    },
+    "gold-light": {
+      "$type": "color",
+      "$value": "#E8D5A8",
+      "$description": "Golden gradient start, streak badges"
+    },
+    "gold-muted": {
+      "$type": "color",
+      "$value": "#D4BE8A",
+      "$description": "Subdued gold for secondary elements"
+    },
+
+    "sky-light": {
+      "$type": "color",
+      "$value": "#B8D4E8",
+      "$description": "Light spiritual blue, streak badge gradient"
+    },
+    "sky-mid": {
+      "$type": "color",
+      "$value": "#7BAFD4",
+      "$description": "Midday prayer gradient"
+    },
+    "sky-deep": {
+      "$type": "color",
+      "$value": "#4A8AB5",
+      "$description": "Deeper blue accent"
+    },
+    "twilight": {
+      "$type": "color",
+      "$value": "#3D5A80",
+      "$description": "Transition blue, midday to night"
+    },
+    "night-sky": {
+      "$type": "color",
+      "$value": "#1B2838",
+      "$description": "Night prayer background"
+    },
+    "deep-night": {
+      "$type": "color",
+      "$value": "#0F1923",
+      "$description": "Darkest background"
+    },
+
+    "sunrise-orange": {
+      "$type": "color",
+      "$value": "#E8A87C",
+      "$description": "Warm sunrise accent"
+    },
+    "sunrise-pink": {
+      "$type": "color",
+      "$value": "#D4877C",
+      "$description": "Rose accent"
+    },
+    "amber": {
+      "$type": "color",
+      "$value": "#C49A6C",
+      "$description": "Warm brown accent"
+    },
+
+    "charcoal": {
+      "$type": "color",
+      "$value": "#2C2C2C",
+      "$description": "Primary buttons, dark UI elements"
+    },
+    "dark-text": {
+      "$type": "color",
+      "$value": "#1A1A1A",
+      "$description": "Headings, primary text"
+    },
+    "mid-gray": {
+      "$type": "color",
+      "$value": "#8A8A8A",
+      "$description": "Secondary text, labels, captions"
+    },
+    "light-gray": {
+      "$type": "color",
+      "$value": "#C4C4C4",
+      "$description": "Placeholder text, disabled states"
+    },
+    "white": {
+      "$type": "color",
+      "$value": "#FFFFFF",
+      "$description": "Pure white"
+    },
+    "off-white": {
+      "$type": "color",
+      "$value": "#FAFAFA",
+      "$description": "Near-white background"
+    },
+
+    "success": {
+      "$type": "color",
+      "$value": "#7CB87C",
+      "$description": "Success states, completed streaks"
+    },
+    "error": {
+      "$type": "color",
+      "$value": "#D47C7C",
+      "$description": "Error states, alerts"
+    },
+
+    "overlay-light-10": {
+      "$type": "color",
+      "$value": "#ffffff1a",
+      "$description": "White 10% — prayer screen overlays"
+    },
+    "overlay-light-15": {
+      "$type": "color",
+      "$value": "#ffffff26",
+      "$description": "White 15% — icon button backgrounds"
+    },
+    "overlay-light-30": {
+      "$type": "color",
+      "$value": "#ffffff4d",
+      "$description": "White 30% — player bar borders"
+    },
+    "overlay-light-50": {
+      "$type": "color",
+      "$value": "#ffffff80",
+      "$description": "White 50% — section labels on dark"
+    },
+    "overlay-dark-06": {
+      "$type": "color",
+      "$value": "#0000000f",
+      "$description": "Black 6% — subtle card shadows"
+    },
+    "overlay-dark-15": {
+      "$type": "color",
+      "$value": "#00000026",
+      "$description": "Black 15% — drop shadows"
+    }
+  },
+
+  "dove-spacing": {
+    "$description": "Spacing scale",
+    "space-xs": { "$type": "number", "$value": 4 },
+    "space-sm": { "$type": "number", "$value": 8 },
+    "space-md": { "$type": "number", "$value": 16 },
+    "space-lg": { "$type": "number", "$value": 24 },
+    "space-xl": { "$type": "number", "$value": 32 },
+    "space-xxl": { "$type": "number", "$value": 48 }
+  },
+
+  "dove-radius": {
+    "$description": "Border radius scale",
+    "radius-sm": { "$type": "number", "$value": 8 },
+    "radius-md": { "$type": "number", "$value": 12 },
+    "radius-lg": { "$type": "number", "$value": 16 },
+    "radius-xl": { "$type": "number", "$value": 24 },
+    "radius-full": { "$type": "number", "$value": 9999 }
+  }
+}
