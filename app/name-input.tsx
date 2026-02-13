@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/theme';
+import { saveUserData } from '@/lib/storage';
 
 const colors = {
   background: '#FAF7F2',
@@ -29,7 +30,10 @@ export default function NameInputScreen() {
   const [name, setName] = useState('');
   const router = useRouter();
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (name.trim()) {
+      await saveUserData({ name: name.trim() });
+    }
     router.push('/faith-intro');
   };
 

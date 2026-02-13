@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { Fonts } from '@/constants/theme';
+import { saveUserData } from '@/lib/storage';
 
 const colors = {
   background: '#FAF7F2',
@@ -40,7 +41,10 @@ export default function YourTopicsScreen() {
     );
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (selected.length > 0) {
+      await saveUserData({ topics: selected });
+    }
     router.push('/your-goals');
   };
 

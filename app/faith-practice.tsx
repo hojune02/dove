@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { Fonts } from '@/constants/theme';
+import { saveUserData } from '@/lib/storage';
 
 const colors = {
   background: '#FAF7F2',
@@ -36,6 +37,7 @@ export default function FaithPracticeScreen() {
     setSelected(option);
     if (hasNavigated.current) return;
     hasNavigated.current = true;
+    saveUserData({ faithPractice: option });
     setTimeout(() => {
       router.push('/your-topics');
     }, 400);

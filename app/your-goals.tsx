@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { Fonts } from '@/constants/theme';
+import { saveUserData } from '@/lib/storage';
 
 const colors = {
   background: '#FAF7F2',
@@ -29,12 +30,15 @@ export default function YourGoalsScreen() {
   const [goals, setGoals] = useState('');
   const router = useRouter();
 
-  const handleContinue = () => {
-    router.push('/free-trial');
+  const handleContinue = async () => {
+    if (goals.trim()) {
+      await saveUserData({ goals: goals.trim() });
+    }
+    router.push('/reminder');
   };
 
   const handleSkip = () => {
-    router.push('/free-trial');
+    router.push('/reminder');
   };
 
   return (
@@ -56,12 +60,13 @@ export default function YourGoalsScreen() {
           </Text>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { wordBreak: 'break-all' } as any]}
             placeholder="I want to..."
             placeholderTextColor={colors.placeholder}
             value={goals}
             onChangeText={setGoals}
             multiline
+            scrollEnabled
             textAlignVertical="top"
           />
         </View>
@@ -124,7 +129,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: Fonts.sans,
     color: colors.heading,
-    minHeight: 180,
+    height: 180,
   },
   footer: {
     paddingHorizontal: 24,

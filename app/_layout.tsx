@@ -55,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="faith-practice" />
           <Stack.Screen name="your-topics" />
           <Stack.Screen name="your-goals" />
+          <Stack.Screen name="reminder" />
           <Stack.Screen name="free-trial" />
           <Stack.Screen name="prayer" />
         </Stack>
