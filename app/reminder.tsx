@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: Fonts.serif,
-    fontSize: 32,
-    lineHeight: 42,
+    fontSize: 34,
+    lineHeight: 44,
     color: colors.heading,
     textAlign: 'center',
   },
@@ -231,6 +231,7 @@ const styles = StyleSheet.create({
   picker: {
     height: 150,
     marginTop: 4,
+    alignSelf: 'center',
   },
   divider: {
     height: 1,
@@ -242,12 +243,13 @@ const styles = StyleSheet.create({
   },
   daysRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 6,
   },
   dayButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: colors.dayDefault,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +15,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+
 import { Fonts } from '@/constants/theme';
 import { quotes } from '@/constants/quotes';
+import { getUserData, saveUserData, UserData } from '@/lib/storage';
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_DISTANCE = 350;
@@ -34,9 +39,70 @@ const colors = {
   badgeText: '#FFFFFF',
 };
 
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_SHORT_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+function padTwo(n: number) {
+  return n.toString().padStart(2, '0');
+}
+
 export default function PrayerScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [userData, setUserData] = useState<UserData>({});
+
+  const openProfile = async () => {
+    const data = await getUserData();
+    setUserData(data);
+    setProfileVisible(true);
+  };
+
+  // Alarm sheet state
+  const [alarmVisible, setAlarmVisible] = useState(false);
+  const [alarmTime, setAlarmTime] = useState(() => {
+    const d = new Date();
+    d.setHours(9, 0, 0, 0);
+    return d;
+  });
+  const [alarmDays, setAlarmDays] = useState<boolean[]>([
+    false, true, true, true, true, true, false,
+  ]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const openAlarm = async () => {
+    const data = await getUserData();
+    if (data.reminder) {
+      const [h, m] = data.reminder.time.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      setAlarmTime(d);
+      setAlarmDays(data.reminder.days);
+    }
+    setShowTimePicker(false);
+    setAlarmVisible(true);
+  };
+
+  const toggleAlarmDay = (index: number) => {
+    setAlarmDays((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  };
+
+  const onAlarmTimeChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (selectedDate) {
+      setAlarmTime(selectedDate);
+    }
+  };
+
+  const handleSaveAlarm = async () => {
+    const timeStr = `${padTwo(alarmTime.getHours())}:${padTwo(alarmTime.getMinutes())}`;
+    await saveUserData({ reminder: { time: timeStr, days: alarmDays } });
+    setAlarmVisible(false);
+  };
 
   const translateY = useSharedValue(0);
   const swapPhase = useSharedValue(0); // 1 = layers hidden during index swap
@@ -238,15 +304,179 @@ export default function PrayerScreen() {
 
           <View style={styles.tabSpacer} />
 
-          <Pressable style={styles.tabButtonSquare}>
-            <Ionicons name="key-outline" size={22} color={colors.textPrimary} />
+          <Pressable style={styles.tabButtonSquare} onPress={openAlarm}>
+            <Ionicons name="alarm-outline" size={22} color={colors.textPrimary} />
           </Pressable>
 
-          <Pressable style={styles.tabButtonSquare}>
+          <Pressable style={styles.tabButtonSquare} onPress={openProfile}>
             <Ionicons name="person-outline" size={22} color={colors.textPrimary} />
           </Pressable>
         </View>
       </SafeAreaView>
+
+      {/* Profile Bottom Sheet */}
+      <Modal
+        visible={profileVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProfileVisible(false)}
+      >
+        <View style={styles.profileOverlay}>
+          <Pressable style={styles.profileBackdrop} onPress={() => setProfileVisible(false)} />
+          <View style={styles.profileSheet}>
+            {/* Header row */}
+            <View style={styles.profileHeader}>
+              <Pressable onPress={() => setProfileVisible(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#1A1A1A" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.profileTitle}>Profile</Text>
+
+            <ScrollView style={styles.profileContent} showsVerticalScrollIndicator={false}>
+              {userData.name && (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bulletLabel}>Name: </Text>
+                    {userData.name}
+                  </Text>
+                </View>
+              )}
+              {userData.faithPractice && (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bulletLabel}>Faith Practice: </Text>
+                    {userData.faithPractice}
+                  </Text>
+                </View>
+              )}
+              {userData.topics && userData.topics.length > 0 && (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bulletLabel}>Topics: </Text>
+                    {userData.topics.join(', ')}
+                  </Text>
+                </View>
+              )}
+              {userData.goals && (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bulletLabel}>Goals: </Text>
+                    {userData.goals}
+                  </Text>
+                </View>
+              )}
+              {userData.reminder && (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>
+                    <Text style={styles.bulletLabel}>Reminder: </Text>
+                    {userData.reminder.time} on{' '}
+                    {userData.reminder.days
+                      .map((on, i) => (on ? DAY_LABELS[i] : null))
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
+                </View>
+              )}
+              {!userData.name &&
+                !userData.faithPractice &&
+                !userData.topics?.length &&
+                !userData.goals &&
+                !userData.reminder && (
+                  <Text style={styles.emptyText}>No profile data yet.</Text>
+                )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Alarm Bottom Sheet */}
+      <Modal
+        visible={alarmVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAlarmVisible(false)}
+      >
+        <View style={styles.profileOverlay}>
+          <Pressable style={styles.profileBackdrop} onPress={() => setAlarmVisible(false)} />
+          <View style={styles.profileSheet}>
+            {/* Header row */}
+            <View style={styles.profileHeader}>
+              <Pressable onPress={() => setAlarmVisible(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#1A1A1A" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.profileTitle}>Set the alarm</Text>
+
+            <View style={styles.alarmCard}>
+              <Pressable
+                style={styles.alarmTimeRow}
+                onPress={() => setShowTimePicker((v) => !v)}
+              >
+                <Text style={styles.alarmLabel}>Time</Text>
+                <View style={styles.alarmTimeBadge}>
+                  <Text style={styles.alarmTimeText}>
+                    {padTwo(alarmTime.getHours())}:{padTwo(alarmTime.getMinutes())}
+                  </Text>
+                </View>
+              </Pressable>
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={alarmTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={onAlarmTimeChange}
+                  style={styles.alarmPicker}
+                />
+              )}
+
+              <View style={styles.alarmDivider} />
+
+              <View style={styles.alarmRepeatSection}>
+                <Text style={styles.alarmLabel}>Repeat</Text>
+                <View style={styles.alarmDaysRow}>
+                  {DAY_SHORT_LABELS.map((label, index) => (
+                    <Pressable
+                      key={index}
+                      style={[
+                        styles.alarmDayButton,
+                        alarmDays[index] && styles.alarmDayButtonSelected,
+                      ]}
+                      onPress={() => toggleAlarmDay(index)}
+                    >
+                      <Text
+                        style={[
+                          styles.alarmDayText,
+                          alarmDays[index] && styles.alarmDayTextSelected,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.alarmSaveButton,
+                pressed && styles.alarmSaveButtonPressed,
+              ]}
+              onPress={handleSaveAlarm}
+            >
+              <Text style={styles.alarmSaveButtonText}>Set alarm</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -373,5 +603,146 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  /* Profile Sheet */
+  profileOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  profileBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  profileSheet: {
+    height: SCREEN_HEIGHT * 0.88,
+    backgroundColor: '#EDEAE5',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: 12,
+  },
+  profileTitle: {
+    fontFamily: Fonts.serif,
+    fontSize: 34,
+    color: '#1A1A1A',
+    marginBottom: 28,
+  },
+  profileContent: {
+    flex: 1,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  bulletDot: {
+    fontFamily: Fonts.sans,
+    fontSize: 18,
+    color: '#1A1A1A',
+    marginRight: 10,
+    lineHeight: 24,
+  },
+  bulletText: {
+    fontFamily: Fonts.sans,
+    fontSize: 17,
+    color: '#1A1A1A',
+    lineHeight: 24,
+    flex: 1,
+  },
+  bulletLabel: {
+    fontFamily: Fonts.sansSemiBold,
+  },
+  emptyText: {
+    fontFamily: Fonts.sans,
+    fontSize: 17,
+    color: '#6B6B6B',
+    textAlign: 'center',
+    marginTop: 40,
+  },
+
+  /* Alarm Sheet */
+  alarmCard: {
+    backgroundColor: '#E5E2DC',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 16,
+  },
+  alarmTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  alarmLabel: {
+    fontFamily: Fonts.sans,
+    fontSize: 17,
+    color: '#1A1A1A',
+  },
+  alarmTimeBadge: {
+    backgroundColor: '#D5D0C8',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  alarmTimeText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 17,
+    color: '#1A1A1A',
+  },
+  alarmPicker: {
+    height: 150,
+    marginTop: 4,
+    alignSelf: 'center',
+  },
+  alarmDivider: {
+    height: 1,
+    backgroundColor: '#D5D0C8',
+    marginVertical: 14,
+  },
+  alarmRepeatSection: {
+    gap: 14,
+  },
+  alarmDaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  alarmDayButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#D5D0C8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alarmDayButtonSelected: {
+    backgroundColor: '#2C2C2C',
+  },
+  alarmDayText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 15,
+    color: '#1A1A1A',
+  },
+  alarmDayTextSelected: {
+    color: '#FFFFFF',
+  },
+  alarmSaveButton: {
+    backgroundColor: '#2C2C2C',
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  alarmSaveButtonPressed: {
+    opacity: 0.8,
+  },
+  alarmSaveButtonText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 17,
+    color: '#FFFFFF',
   },
 });
