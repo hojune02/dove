@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Fonts } from '@/constants/theme';
 import { saveUserData } from '@/lib/storage';
+import { requestPermissions, scheduleReminder } from '@/lib/notifications';
 
 const colors = {
   background: '#FAF7F2',
@@ -65,8 +66,13 @@ export default function ReminderScreen() {
   };
 
   const handleSetAlarm = async () => {
+    if (!days.some(Boolean)) return;
+    const granted = await requestPermissions();
     const timeStr = `${padTwo(time.getHours())}:${padTwo(time.getMinutes())}`;
     await saveUserData({ reminder: { time: timeStr, days } });
+    if (granted) {
+      await scheduleReminder(timeStr, days);
+    }
     router.push('/free-trial');
   };
 
@@ -149,6 +155,7 @@ export default function ReminderScreen() {
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              !days.some(Boolean) && styles.buttonDim,
             ]}
             onPress={handleSetAlarm}
           >
@@ -273,6 +280,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  buttonDim: {
+    opacity: 0.7,
   },
   buttonText: {
     fontFamily: Fonts.sansSemiBold,

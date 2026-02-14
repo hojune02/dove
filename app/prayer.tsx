@@ -1,17 +1,16 @@
-import { useCallback, useState } from 'react';
-import { Dimensions, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Dimensions, Image, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  Extrapolation,
-  interpolate,
+  FadeIn,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -22,9 +21,8 @@ import DateTimePicker, {
 import { Fonts } from '@/constants/theme';
 import { quotes } from '@/constants/quotes';
 import { getUserData, saveUserData, UserData } from '@/lib/storage';
+import { requestPermissions, scheduleReminder } from '@/lib/notifications';
 
-const SWIPE_THRESHOLD = 80;
-const EXIT_DISTANCE = 350;
 const MAX_FAVORITES = 5;
 
 const colors = {
@@ -35,8 +33,6 @@ const colors = {
   progressTrack: 'rgba(0, 0, 0, 0.15)',
   progressFill: '#2C2C2C',
   tabBackground: 'rgba(255, 255, 255, 0.45)',
-  badgeBackground: '#E85D5D',
-  badgeText: '#FFFFFF',
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -47,11 +43,65 @@ function padTwo(n: number) {
   return n.toString().padStart(2, '0');
 }
 
+function getToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${padTwo(d.getMonth() + 1)}-${padTwo(d.getDate())}`;
+}
+
 export default function PrayerScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [favorites, setFavorites] = useState<Set<number>>(new Set()); // all-time liked quotes
+  const [todayLikes, setTodayLikes] = useState<Set<number>>(new Set()); // today's likes (pill counter)
   const [profileVisible, setProfileVisible] = useState(false);
   const [userData, setUserData] = useState<UserData>({});
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationShownToday = useRef(false);
+
+  const pillOpacity = useSharedValue(1);
+
+  // Load persisted state on mount; reset daily pill if it's a new day
+  const loadDailyState = useCallback(async () => {
+    const data = await getUserData();
+    const today = getToday();
+
+    // Always restore all-time favorites
+    if (data.likedQuotes && data.likedQuotes.length > 0) {
+      setFavorites(new Set(data.likedQuotes));
+    }
+
+    // Daily pill state
+    if (data.todayLikesDate === today && data.todayLikes && data.todayLikes.length > 0) {
+      setTodayLikes(new Set(data.todayLikes));
+      if (data.todayLikes.length >= MAX_FAVORITES) {
+        pillOpacity.value = 0;
+      } else {
+        pillOpacity.value = 1;
+      }
+      if (data.celebrationShownDate === today) {
+        celebrationShownToday.current = true;
+      }
+    } else {
+      // New day — reset daily counter only
+      setTodayLikes(new Set());
+      pillOpacity.value = 1;
+      celebrationShownToday.current = false;
+      await saveUserData({ todayLikes: [], todayLikesDate: today });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDailyState();
+  }, [loadDailyState]);
+
+  // Re-check on app foreground (handles midnight crossover)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        loadDailyState();
+      }
+    });
+    return () => sub.remove();
+  }, [loadDailyState]);
 
   const openProfile = async () => {
     const data = await getUserData();
@@ -99,127 +149,95 @@ export default function PrayerScreen() {
   };
 
   const handleSaveAlarm = async () => {
+    const granted = await requestPermissions();
+    if (!granted) {
+      setAlarmVisible(false);
+      return;
+    }
     const timeStr = `${padTwo(alarmTime.getHours())}:${padTwo(alarmTime.getMinutes())}`;
     await saveUserData({ reminder: { time: timeStr, days: alarmDays } });
+    await scheduleReminder(timeStr, alarmDays);
     setAlarmVisible(false);
   };
 
-  const translateY = useSharedValue(0);
-  const swapPhase = useSharedValue(0); // 1 = layers hidden during index swap
+  const quoteOpacity = useSharedValue(1);
+  const isAnimating = useSharedValue(false);
 
-  const nextIndex = (currentIndex + 1) % quotes.length;
-
-  const completeTransition = useCallback(() => {
+  const advanceQuote = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % quotes.length);
-    // Double rAF ensures React has committed & painted the new text
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Smooth fade-in instead of instant reveal
-        swapPhase.value = withTiming(0, {
-          duration: 500,
-          easing: Easing.out(Easing.cubic),
-        });
-      });
-    });
-  }, [swapPhase]);
+    // Fade new quote in after React has committed
+    quoteOpacity.value = withDelay(
+      50,
+      withTiming(1, { duration: 1000, easing: Easing.out(Easing.cubic) }, () => {
+        isAnimating.value = false;
+      }),
+    );
+  }, [quoteOpacity, isAnimating]);
 
-  const gesture = Gesture.Pan()
-    .onUpdate((e) => {
-      // Follow finger 1:1 on upward swipe
-      if (e.translationY < 0) {
-        translateY.value = e.translationY;
-      } else {
-        translateY.value = 0;
-      }
-    })
-    .onEnd((e) => {
-      if (e.translationY < -SWIPE_THRESHOLD) {
-        // Faster flick → much slower animation so the next quote rises gradually
-        const velocity = Math.abs(e.velocityY);
-        const duration = Math.min(1800, Math.max(800, velocity * 0.6));
-
-        translateY.value = withTiming(
-          -EXIT_DISTANCE,
-          { duration, easing: Easing.out(Easing.cubic) },
-          (finished) => {
-            if (finished) {
-              swapPhase.value = 1; // hide layers during swap
-              translateY.value = 0; // reset position on UI thread while hidden
-              runOnJS(completeTransition)();
-            }
-          },
-        );
-      } else {
-        // Snap back smoothly
-        translateY.value = withSpring(0, {
-          damping: 25,
-          stiffness: 400,
-        });
+  const handleTapQuote = useCallback(() => {
+    if (isAnimating.value) return;
+    isAnimating.value = true;
+    // Fade out current quote, then swap
+    quoteOpacity.value = withTiming(0, {
+      duration: 1000,
+      easing: Easing.in(Easing.cubic),
+    }, (finished) => {
+      if (finished) {
+        runOnJS(advanceQuote)();
       }
     });
+  }, [quoteOpacity, isAnimating, advanceQuote]);
 
-  // Current quote: exits upward, fades out gradually, scales down
-  const currentQuoteStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      {
-        scale: interpolate(
-          translateY.value,
-          [-EXIT_DISTANCE, 0],
-          [0.85, 1],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-    opacity:
-      (1 - swapPhase.value) *
-      interpolate(
-        translateY.value,
-        [-EXIT_DISTANCE, -EXIT_DISTANCE * 0.6, -EXIT_DISTANCE * 0.15, 0],
-        [0, 0.15, 0.85, 1],
-        Extrapolation.CLAMP,
-      ),
-  }));
-
-  // Next quote: rises from below, fades in gradually, scales up
-  const nextQuoteStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: interpolate(
-          translateY.value,
-          [-EXIT_DISTANCE, 0],
-          [0, EXIT_DISTANCE * 0.6],
-          Extrapolation.CLAMP,
-        ),
-      },
-      {
-        scale: interpolate(
-          translateY.value,
-          [-EXIT_DISTANCE, 0],
-          [1, 0.9],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-    opacity:
-      (1 - swapPhase.value) *
-      interpolate(
-        translateY.value,
-        [-EXIT_DISTANCE, -EXIT_DISTANCE * 0.5, -EXIT_DISTANCE * 0.15, 0],
-        [1, 0.7, 0.1, 0],
-        Extrapolation.CLAMP,
-      ),
+  const quoteAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: quoteOpacity.value,
   }));
 
   const isFavorited = favorites.has(currentIndex);
 
+  const triggerCelebration = useCallback(() => {
+    setShowCelebration(true);
+    celebrationShownToday.current = true;
+    saveUserData({ celebrationShownDate: getToday() });
+  }, []);
+
   const toggleFavorite = () => {
+    const today = getToday();
+
+    // Update all-time favorites
     setFavorites((prev) => {
       const next = new Set(prev);
       if (next.has(currentIndex)) {
         next.delete(currentIndex);
       } else {
         next.add(currentIndex);
+      }
+      saveUserData({ likedQuotes: [...next] });
+      return next;
+    });
+
+    // Update today's likes (for pill counter)
+    setTodayLikes((prev) => {
+      const next = new Set(prev);
+      if (next.has(currentIndex)) {
+        next.delete(currentIndex);
+      } else {
+        next.add(currentIndex);
+      }
+      saveUserData({ todayLikes: [...next], todayLikesDate: today });
+
+      if (
+        next.size >= MAX_FAVORITES &&
+        prev.size < MAX_FAVORITES &&
+        !celebrationShownToday.current
+      ) {
+        pillOpacity.value = withDelay(
+          800,
+          withTiming(0, { duration: 600 }, (finished) => {
+            if (finished) {
+              runOnJS(triggerCelebration)();
+            }
+          }),
+        );
       }
       return next;
     });
@@ -237,46 +255,42 @@ export default function PrayerScreen() {
   };
 
   const quote = quotes[currentIndex];
-  const nextQuote = quotes[nextIndex];
-  const favoriteCount = Math.min(favorites.size, MAX_FAVORITES);
-  const progressWidth = (favoriteCount / MAX_FAVORITES) * 100;
+  const todayLikeCount = Math.min(todayLikes.size, MAX_FAVORITES);
+  const progressWidth = (todayLikeCount / MAX_FAVORITES) * 100;
+
+  const pillAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: pillOpacity.value,
+  }));
 
   return (
     <LinearGradient
-      colors={['#8399B5', '#A8A0AE', '#C8A89C', '#D8BB9A']}
+      colors={['#C4A8D0', '#D4A0C8', '#D8929E', '#E0A090']}
       locations={[0, 0.35, 0.7, 1]}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
         {/* Progress Pill */}
-        <View style={styles.pillRow}>
+        <Animated.View style={[styles.pillRow, pillAnimatedStyle]}>
           <View style={styles.pill}>
             <Ionicons name="heart-outline" size={16} color={colors.textPrimary} />
             <Text style={styles.pillText}>
-              {favoriteCount}/{MAX_FAVORITES}
+              {todayLikeCount}/{MAX_FAVORITES}
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${progressWidth}%` }]} />
             </View>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Quote Area — two layers for interactive crossfade */}
-        <GestureDetector gesture={gesture}>
-          <Animated.View style={styles.quoteArea}>
-            {/* Next quote (behind, rises from below) */}
-            <Animated.View style={[styles.quoteAbsolute, nextQuoteStyle]}>
-              <Text style={styles.quoteText}>{nextQuote.text}</Text>
-              <Text style={styles.quoteRef}>{'\u2014'}{nextQuote.ref}</Text>
-            </Animated.View>
-
-            {/* Current quote (front, exits upward) */}
-            <Animated.View style={[styles.quoteAbsolute, currentQuoteStyle]}>
+        {/* Quote Area — tap to fade to next */}
+        <View style={styles.quoteArea}>
+          <Pressable style={styles.quoteTouchable} onPress={handleTapQuote}>
+            <Animated.View style={[styles.quoteContent, quoteAnimatedStyle]}>
               <Text style={styles.quoteText}>{quote.text}</Text>
               <Text style={styles.quoteRef}>{'\u2014'}{quote.ref}</Text>
             </Animated.View>
-          </Animated.View>
-        </GestureDetector>
+          </Pressable>
+        </View>
 
         {/* Action Buttons */}
         <View style={styles.actionRow}>
@@ -294,13 +308,10 @@ export default function PrayerScreen() {
 
         {/* Bottom Tab Bar */}
         <View style={styles.tabBar}>
-          <Pressable style={styles.tabButtonWide}>
-            <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>NEW</Text>
-            </View>
-            <Ionicons name="grid-outline" size={20} color={colors.textPrimary} />
-            <Text style={styles.tabLabel}>General</Text>
-          </Pressable>
+          <Image
+            source={require('@/assets/images/dove_transparency.png')}
+            style={styles.doveMascot}
+          />
 
           <View style={styles.tabSpacer} />
 
@@ -394,6 +405,30 @@ export default function PrayerScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Celebration Overlay */}
+      {showCelebration && (
+        <Animated.View entering={FadeIn.duration(1200)} style={styles.celebrationOverlay}>
+          <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+          <Pressable
+            style={styles.celebrationTouchable}
+            onPress={() => setShowCelebration(false)}
+          >
+            <Animated.View entering={FadeIn.duration(1600).delay(400)} style={styles.celebrationContent}>
+              <Image
+                source={require('@/assets/images/dove_transparency.png')}
+                style={styles.celebrationDove}
+              />
+              <Text style={styles.celebrationTitle}>
+                You have liked 5 quotes today.
+              </Text>
+              <Text style={styles.celebrationBody}>
+                You are now closer to God, and He will help you find peace.
+              </Text>
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
+      )}
 
       {/* Alarm Bottom Sheet */}
       <Modal
@@ -525,12 +560,15 @@ const styles = StyleSheet.create({
   quoteArea: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 32,
   },
-  quoteAbsolute: {
-    ...StyleSheet.absoluteFillObject,
+  quoteTouchable: {
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 32,
+    paddingVertical: 20,
+  },
+  quoteContent: {
+    alignItems: 'center',
   },
   quoteText: {
     fontFamily: Fonts.serif,
@@ -566,33 +604,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 12,
   },
-  tabButtonWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.tabBackground,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  tabLabel: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  newBadge: {
-    position: 'absolute',
-    top: -10,
-    left: '50%',
-    backgroundColor: colors.badgeBackground,
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  newBadgeText: {
-    fontFamily: Fonts.sansBold,
-    fontSize: 10,
-    color: colors.badgeText,
+  doveMascot: {
+    width: 44,
+    height: 44,
+    resizeMode: 'contain',
   },
   tabSpacer: {
     flex: 1,
@@ -744,5 +759,40 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansSemiBold,
     fontSize: 17,
     color: '#FFFFFF',
+  },
+
+  /* Celebration Overlay */
+  celebrationOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+  celebrationTouchable: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  celebrationContent: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  celebrationDove: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 24,
+  },
+  celebrationTitle: {
+    fontFamily: Fonts.serif,
+    fontSize: 24,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  celebrationBody: {
+    fontFamily: Fonts.sans,
+    fontSize: 17,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });

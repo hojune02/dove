@@ -31,14 +31,13 @@ export default function NameInputScreen() {
   const router = useRouter();
 
   const handleContinue = async () => {
-    if (name.trim()) {
-      await saveUserData({ name: name.trim() });
-    }
+    if (!name.trim()) return;
+    await saveUserData({ name: name.trim() });
     router.push('/faith-intro');
   };
 
   const handleSkip = () => {
-    router.push('/free-trial');
+    router.push('/faith-intro');
   };
 
   return (
@@ -75,6 +74,7 @@ export default function NameInputScreen() {
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              !name.trim() && styles.buttonDim,
             ]}
             onPress={handleContinue}
           >
@@ -140,6 +140,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  buttonDim: {
+    opacity: 0.7,
   },
   buttonText: {
     fontFamily: Fonts.sansSemiBold,

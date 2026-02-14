@@ -31,9 +31,8 @@ export default function YourGoalsScreen() {
   const router = useRouter();
 
   const handleContinue = async () => {
-    if (goals.trim()) {
-      await saveUserData({ goals: goals.trim() });
-    }
+    if (!goals.trim()) return;
+    await saveUserData({ goals: goals.trim() });
     router.push('/reminder');
   };
 
@@ -76,6 +75,7 @@ export default function YourGoalsScreen() {
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              !goals.trim() && styles.buttonDim,
             ]}
             onPress={handleContinue}
           >
@@ -143,6 +143,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  buttonDim: {
+    opacity: 0.7,
   },
   buttonText: {
     fontFamily: Fonts.sansSemiBold,

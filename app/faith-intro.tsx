@@ -8,7 +8,6 @@ import { Fonts } from '@/constants/theme';
 const colors = {
   background: '#FAF7F2',
   heading: '#1A1A1A',
-  skip: '#8A8A8A',
   buttonBackground: '#C9A96E',
   buttonBackgroundPressed: '#D4BE8A',
   buttonText: '#1A1A1A',
@@ -21,19 +20,9 @@ export default function FaithIntroScreen() {
     router.push('/faith-practice');
   };
 
-  const handleSkip = () => {
-    router.push('/free-trial');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.flex}>
-        <View style={styles.header}>
-          <Pressable onPress={handleSkip} hitSlop={16}>
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-        </View>
-
         <View style={styles.content}>
           <Text style={styles.heading}>
             Let's talk about your{'\n'}faith and your{'\n'}personal goals
@@ -66,17 +55,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
-  skipText: {
-    fontFamily: Fonts.sans,
-    fontSize: 16,
-    color: colors.skip,
   },
   content: {
     flex: 1,

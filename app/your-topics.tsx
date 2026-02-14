@@ -42,14 +42,13 @@ export default function YourTopicsScreen() {
   };
 
   const handleContinue = async () => {
-    if (selected.length > 0) {
-      await saveUserData({ topics: selected });
-    }
+    if (selected.length === 0) return;
+    await saveUserData({ topics: selected });
     router.push('/your-goals');
   };
 
   const handleSkip = () => {
-    router.push('/free-trial');
+    router.push('/your-goals');
   };
 
   return (
@@ -97,6 +96,7 @@ export default function YourTopicsScreen() {
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              selected.length === 0 && styles.buttonDim,
             ]}
             onPress={handleContinue}
           >
@@ -176,6 +176,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  buttonDim: {
+    opacity: 0.7,
   },
   buttonText: {
     fontFamily: Fonts.sansSemiBold,

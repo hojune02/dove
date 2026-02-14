@@ -46,7 +46,7 @@ export default function FaithPracticeScreen() {
   const handleSkip = () => {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
-    router.push('/free-trial');
+    router.push('/your-topics');
   };
 
   return (
