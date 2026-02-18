@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Dimensions, Image, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, {
   Easing,
-  FadeIn,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -23,19 +21,13 @@ import { quotes } from '@/constants/quotes';
 import { getUserData, saveUserData, UserData } from '@/lib/storage';
 import { requestPermissions, scheduleReminder } from '@/lib/notifications';
 
-const MAX_FAVORITES = 5;
-
 const colors = {
   textPrimary: '#1A1A1A',
   textSecondary: '#3A3A3A',
   iconColor: '#2C2C2C',
-  pillBackground: 'rgba(255, 255, 255, 0.7)',
-  progressTrack: 'rgba(0, 0, 0, 0.15)',
-  progressFill: '#2C2C2C',
   tabBackground: 'rgba(255, 255, 255, 0.45)',
 };
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_SHORT_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -43,70 +35,112 @@ function padTwo(n: number) {
   return n.toString().padStart(2, '0');
 }
 
-function getToday(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${padTwo(d.getMonth() + 1)}-${padTwo(d.getDate())}`;
-}
-
 export default function PrayerScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [favorites, setFavorites] = useState<Set<number>>(new Set()); // all-time liked quotes
-  const [todayLikes, setTodayLikes] = useState<Set<number>>(new Set()); // today's likes (pill counter)
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [profileVisible, setProfileVisible] = useState(false);
   const [userData, setUserData] = useState<UserData>({});
-  const [showCelebration, setShowCelebration] = useState(false);
-  const celebrationShownToday = useRef(false);
+  const [profilePage, setProfilePage] = useState<'menu' | 'name' | 'goals' | 'topics' | 'faith' | 'liked'>('menu');
+  const [editName, setEditName] = useState('');
+  const [editGoals, setEditGoals] = useState('');
+  const [editTopics, setEditTopics] = useState<string[]>([]);
+  const [editFaith, setEditFaith] = useState<string | null>(null);
+  const [showOnlyLiked, setShowOnlyLiked] = useState(false);
+  const [editShowOnlyLiked, setEditShowOnlyLiked] = useState(false);
 
-  const pillOpacity = useSharedValue(1);
-
-  // Load persisted state on mount; reset daily pill if it's a new day
-  const loadDailyState = useCallback(async () => {
-    const data = await getUserData();
-    const today = getToday();
-
-    // Always restore all-time favorites
-    if (data.likedQuotes && data.likedQuotes.length > 0) {
-      setFavorites(new Set(data.likedQuotes));
-    }
-
-    // Daily pill state
-    if (data.todayLikesDate === today && data.todayLikes && data.todayLikes.length > 0) {
-      setTodayLikes(new Set(data.todayLikes));
-      if (data.todayLikes.length >= MAX_FAVORITES) {
-        pillOpacity.value = 0;
-      } else {
-        pillOpacity.value = 1;
-      }
-      if (data.celebrationShownDate === today) {
-        celebrationShownToday.current = true;
-      }
-    } else {
-      // New day — reset daily counter only
-      setTodayLikes(new Set());
-      pillOpacity.value = 1;
-      celebrationShownToday.current = false;
-      await saveUserData({ todayLikes: [], todayLikesDate: today });
-    }
-  }, []);
-
+  // Load persisted liked quotes and preferences on mount
   useEffect(() => {
-    loadDailyState();
-  }, [loadDailyState]);
-
-  // Re-check on app foreground (handles midnight crossover)
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        loadDailyState();
+    getUserData().then((data) => {
+      if (data.likedQuotes && data.likedQuotes.length > 0) {
+        setFavorites(new Set(data.likedQuotes));
+      }
+      if (data.showOnlyLiked) {
+        setShowOnlyLiked(true);
       }
     });
-    return () => sub.remove();
-  }, [loadDailyState]);
+  }, []);
 
   const openProfile = async () => {
     const data = await getUserData();
     setUserData(data);
+    setProfilePage('menu');
     setProfileVisible(true);
+  };
+
+  const closeProfile = () => {
+    setProfileVisible(false);
+    setProfilePage('menu');
+  };
+
+  const openEditPage = (page: 'name' | 'goals' | 'topics' | 'faith' | 'liked') => {
+    if (page === 'name') setEditName(userData.name || '');
+    if (page === 'goals') setEditGoals(userData.goals || '');
+    if (page === 'topics') setEditTopics(userData.topics || []);
+    if (page === 'faith') setEditFaith(userData.faithPractice || null);
+    if (page === 'liked') setEditShowOnlyLiked(favorites.size > 0 ? showOnlyLiked : false);
+    setProfilePage(page);
+  };
+
+  const handleSaveEdit = async () => {
+    if (profilePage === 'name') {
+      if (editName.trim() === (userData.name || '')) return;
+      await saveUserData({ name: editName.trim() });
+      setUserData((prev) => ({ ...prev, name: editName.trim() }));
+    } else if (profilePage === 'goals') {
+      if (editGoals.trim() === (userData.goals || '')) return;
+      await saveUserData({ goals: editGoals.trim() });
+      setUserData((prev) => ({ ...prev, goals: editGoals.trim() }));
+    } else if (profilePage === 'topics') {
+      const orig = userData.topics || [];
+      if (JSON.stringify([...editTopics].sort()) === JSON.stringify([...orig].sort())) return;
+      await saveUserData({ topics: editTopics });
+      setUserData((prev) => ({ ...prev, topics: editTopics }));
+    } else if (profilePage === 'faith') {
+      if (editFaith === (userData.faithPractice || null)) return;
+      if (!editFaith) return;
+      await saveUserData({ faithPractice: editFaith });
+      setUserData((prev) => ({ ...prev, faithPractice: editFaith }));
+    } else if (profilePage === 'liked') {
+      if (editShowOnlyLiked === showOnlyLiked) return;
+      await saveUserData({ showOnlyLiked: editShowOnlyLiked });
+      setShowOnlyLiked(editShowOnlyLiked);
+      if (editShowOnlyLiked && favorites.size > 0) {
+        const sorted = [...favorites].sort((a, b) => a - b);
+        setCurrentIndex(sorted[0]);
+      }
+    }
+    setProfilePage('menu');
+  };
+
+  const hasEditChanged = () => {
+    if (profilePage === 'name') return editName.trim() !== (userData.name || '');
+    if (profilePage === 'goals') return editGoals.trim() !== (userData.goals || '');
+    if (profilePage === 'topics') {
+      const orig = userData.topics || [];
+      return JSON.stringify([...editTopics].sort()) !== JSON.stringify([...orig].sort());
+    }
+    if (profilePage === 'faith') return editFaith !== (userData.faithPractice || null);
+    if (profilePage === 'liked') return editShowOnlyLiked !== showOnlyLiked;
+    return false;
+  };
+
+  const FAITH_OPTIONS = [
+    'Actively practicing',
+    'Exploring',
+    'Lapsed',
+    'Spiritual but not religious',
+    'Other',
+  ];
+
+  const ALL_TOPICS = [
+    'Hope', 'Uplifting', 'Healing', 'Mental Health',
+    'Faith', 'Affirmations', 'Quotes', 'God',
+  ];
+
+  const toggleEditTopic = (topic: string) => {
+    setEditTopics((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+    );
   };
 
   // Alarm sheet state
@@ -164,7 +198,15 @@ export default function PrayerScreen() {
   const isAnimating = useSharedValue(false);
 
   const advanceQuote = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % quotes.length);
+    const indices = showOnlyLiked ? [...favorites].sort((a, b) => a - b) : null;
+    setCurrentIndex((prev) => {
+      if (indices && indices.length > 0) {
+        const currentPos = indices.indexOf(prev);
+        const nextPos = (currentPos + 1) % indices.length;
+        return indices[nextPos];
+      }
+      return (prev + 1) % quotes.length;
+    });
     // Fade new quote in after React has committed
     quoteOpacity.value = withDelay(
       50,
@@ -172,7 +214,7 @@ export default function PrayerScreen() {
         isAnimating.value = false;
       }),
     );
-  }, [quoteOpacity, isAnimating]);
+  }, [quoteOpacity, isAnimating, showOnlyLiked, favorites]);
 
   const handleTapQuote = useCallback(() => {
     if (isAnimating.value) return;
@@ -194,51 +236,29 @@ export default function PrayerScreen() {
 
   const isFavorited = favorites.has(currentIndex);
 
-  const triggerCelebration = useCallback(() => {
-    setShowCelebration(true);
-    celebrationShownToday.current = true;
-    saveUserData({ celebrationShownDate: getToday() });
-  }, []);
-
   const toggleFavorite = () => {
-    const today = getToday();
-
-    // Update all-time favorites
     setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(currentIndex)) {
+      const wasLiked = next.has(currentIndex);
+      if (wasLiked) {
         next.delete(currentIndex);
       } else {
         next.add(currentIndex);
       }
-      saveUserData({ likedQuotes: [...next] });
-      return next;
-    });
 
-    // Update today's likes (for pill counter)
-    setTodayLikes((prev) => {
-      const next = new Set(prev);
-      if (next.has(currentIndex)) {
-        next.delete(currentIndex);
+      // If in liked-only mode and we just un-liked the last quote
+      if (showOnlyLiked && wasLiked && next.size === 0) {
+        setShowOnlyLiked(false);
+        saveUserData({ likedQuotes: [], showOnlyLiked: false });
+      } else if (showOnlyLiked && wasLiked && next.size > 0) {
+        saveUserData({ likedQuotes: [...next] });
+        const remaining = [...next].sort((a, b) => a - b);
+        const nextIdx = remaining.find((i) => i > currentIndex) ?? remaining[0];
+        setCurrentIndex(nextIdx);
       } else {
-        next.add(currentIndex);
+        saveUserData({ likedQuotes: [...next] });
       }
-      saveUserData({ todayLikes: [...next], todayLikesDate: today });
 
-      if (
-        next.size >= MAX_FAVORITES &&
-        prev.size < MAX_FAVORITES &&
-        !celebrationShownToday.current
-      ) {
-        pillOpacity.value = withDelay(
-          800,
-          withTiming(0, { duration: 600 }, (finished) => {
-            if (finished) {
-              runOnJS(triggerCelebration)();
-            }
-          }),
-        );
-      }
       return next;
     });
   };
@@ -255,12 +275,6 @@ export default function PrayerScreen() {
   };
 
   const quote = quotes[currentIndex];
-  const todayLikeCount = Math.min(todayLikes.size, MAX_FAVORITES);
-  const progressWidth = (todayLikeCount / MAX_FAVORITES) * 100;
-
-  const pillAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: pillOpacity.value,
-  }));
 
   return (
     <LinearGradient
@@ -269,19 +283,6 @@ export default function PrayerScreen() {
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
-        {/* Progress Pill */}
-        <Animated.View style={[styles.pillRow, pillAnimatedStyle]}>
-          <View style={styles.pill}>
-            <Ionicons name="heart-outline" size={16} color={colors.textPrimary} />
-            <Text style={styles.pillText}>
-              {todayLikeCount}/{MAX_FAVORITES}
-            </Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progressWidth}%` }]} />
-            </View>
-          </View>
-        </Animated.View>
-
         {/* Quote Area — tap to fade to next */}
         <View style={styles.quoteArea}>
           <Pressable style={styles.quoteTouchable} onPress={handleTapQuote}>
@@ -330,105 +331,224 @@ export default function PrayerScreen() {
         visible={profileVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setProfileVisible(false)}
+        onRequestClose={closeProfile}
       >
         <View style={styles.profileOverlay}>
-          <Pressable style={styles.profileBackdrop} onPress={() => setProfileVisible(false)} />
+          <Pressable style={styles.profileBackdrop} onPress={closeProfile} />
           <View style={styles.profileSheet}>
             {/* Header row */}
             <View style={styles.profileHeader}>
-              <Pressable onPress={() => setProfileVisible(false)} hitSlop={12}>
-                <Ionicons name="close" size={28} color="#1A1A1A" />
+              <Pressable
+                onPress={profilePage === 'menu' ? closeProfile : () => setProfilePage('menu')}
+                hitSlop={12}
+              >
+                <Ionicons
+                  name={profilePage === 'menu' ? 'close' : 'chevron-back'}
+                  size={28}
+                  color="#1A1A1A"
+                />
               </Pressable>
             </View>
 
-            <Text style={styles.profileTitle}>Profile</Text>
+            {profilePage === 'menu' && (
+              <>
+                <Text style={styles.profileTitle}>Profile</Text>
+                <View style={styles.profileMenuList}>
+                  <Pressable style={styles.profileMenuButton} onPress={() => openEditPage('name')}>
+                    <Ionicons name="person-outline" size={24} color="#1A1A1A" />
+                    <Text style={styles.profileMenuLabel}>Name</Text>
+                    <View style={styles.profileMenuSpacer} />
+                    <Ionicons name="chevron-forward" size={22} color="#8A8A8A" />
+                  </Pressable>
 
-            <ScrollView style={styles.profileContent} showsVerticalScrollIndicator={false}>
-              {userData.name && (
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
-                  <Text style={styles.bulletText}>
-                    <Text style={styles.bulletLabel}>Name: </Text>
-                    {userData.name}
-                  </Text>
+                  <Pressable style={styles.profileMenuButton} onPress={() => openEditPage('faith')}>
+                    <MaterialCommunityIcons name="hands-pray" size={24} color="#1A1A1A" />
+                    <Text style={styles.profileMenuLabel}>Faith Practice</Text>
+                    <View style={styles.profileMenuSpacer} />
+                    <Ionicons name="chevron-forward" size={22} color="#8A8A8A" />
+                  </Pressable>
+
+                  <Pressable style={styles.profileMenuButton} onPress={() => openEditPage('topics')}>
+                    <Ionicons name="pricetags-outline" size={24} color="#1A1A1A" />
+                    <Text style={styles.profileMenuLabel}>Topics</Text>
+                    <View style={styles.profileMenuSpacer} />
+                    <Ionicons name="chevron-forward" size={22} color="#8A8A8A" />
+                  </Pressable>
+
+                  <Pressable style={styles.profileMenuButton} onPress={() => openEditPage('goals')}>
+                    <Ionicons name="flag-outline" size={24} color="#1A1A1A" />
+                    <Text style={styles.profileMenuLabel}>Goals</Text>
+                    <View style={styles.profileMenuSpacer} />
+                    <Ionicons name="chevron-forward" size={22} color="#8A8A8A" />
+                  </Pressable>
+
+                  <Pressable style={styles.profileMenuButton} onPress={() => openEditPage('liked')}>
+                    <Ionicons name="heart" size={24} color="#1A1A1A" />
+                    <Text style={styles.profileMenuLabel}>Liked Quotes</Text>
+                    <View style={styles.profileMenuSpacer} />
+                    <Ionicons name="chevron-forward" size={22} color="#8A8A8A" />
+                  </Pressable>
                 </View>
-              )}
-              {userData.faithPractice && (
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
-                  <Text style={styles.bulletText}>
-                    <Text style={styles.bulletLabel}>Faith Practice: </Text>
-                    {userData.faithPractice}
-                  </Text>
+              </>
+            )}
+
+            {profilePage === 'name' && (
+              <KeyboardAvoidingView
+                style={styles.editContainer}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Math.round(SCREEN_HEIGHT * 0.12) + 5}
+              >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={styles.editInner}>
+                    <Text style={styles.profileTitle}>Edit Name</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      placeholder="Your name"
+                      placeholderTextColor="#C4C4C4"
+                      value={editName}
+                      onChangeText={setEditName}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+                <Pressable
+                  style={[styles.editSaveButton, !hasEditChanged() && styles.editSaveButtonDim]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>Save</Text>
+                </Pressable>
+              </KeyboardAvoidingView>
+            )}
+
+            {profilePage === 'goals' && (
+              <KeyboardAvoidingView
+                style={styles.editContainer}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Math.round(SCREEN_HEIGHT * 0.12) + 5}
+              >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={styles.editInner}>
+                    <Text style={styles.profileTitle}>Edit Goals</Text>
+                    <TextInput
+                      style={[styles.editInput, styles.editInputMultiline]}
+                      placeholder="I want to..."
+                      placeholderTextColor="#C4C4C4"
+                      value={editGoals}
+                      onChangeText={setEditGoals}
+                      multiline
+                      scrollEnabled
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+                <Pressable
+                  style={[styles.editSaveButton, !hasEditChanged() && styles.editSaveButtonDim]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>Save</Text>
+                </Pressable>
+              </KeyboardAvoidingView>
+            )}
+
+            {profilePage === 'topics' && (
+              <View style={styles.editContainer}>
+                <Text style={styles.profileTitle}>Edit Topics</Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <View style={styles.editBadges}>
+                    {ALL_TOPICS.map((topic) => {
+                      const isSelected = editTopics.includes(topic);
+                      return (
+                        <Pressable
+                          key={topic}
+                          style={[styles.editBadge, isSelected && styles.editBadgeSelected]}
+                          onPress={() => toggleEditTopic(topic)}
+                        >
+                          <Text style={[styles.editBadgeText, isSelected && styles.editBadgeTextSelected]}>
+                            +{'  '}{topic}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+                <Pressable
+                  style={[styles.editSaveButton, !hasEditChanged() && styles.editSaveButtonDim]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>Save</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {profilePage === 'faith' && (
+              <View style={styles.editContainer}>
+                <Text style={styles.profileTitle}>Edit Faith Practice</Text>
+                <View style={styles.editFaithOptions}>
+                  {FAITH_OPTIONS.map((option) => {
+                    const isSelected = editFaith === option;
+                    return (
+                      <Pressable
+                        key={option}
+                        style={[styles.editFaithCard, isSelected && styles.editFaithCardSelected]}
+                        onPress={() => setEditFaith(option)}
+                      >
+                        <Text style={styles.editFaithCardText}>{option}</Text>
+                        <View style={[styles.editRadio, isSelected && styles.editRadioSelected]}>
+                          {isSelected && <View style={styles.editRadioDot} />}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              )}
-              {userData.topics && userData.topics.length > 0 && (
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
-                  <Text style={styles.bulletText}>
-                    <Text style={styles.bulletLabel}>Topics: </Text>
-                    {userData.topics.join(', ')}
-                  </Text>
+                <Pressable
+                  style={[styles.editSaveButton, !hasEditChanged() && styles.editSaveButtonDim]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>Save</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {profilePage === 'liked' && (
+              <View style={styles.editContainer}>
+                <Text style={styles.profileTitle}>Only Show Liked Quotes?</Text>
+                <View style={styles.editFaithOptions}>
+                  {['Yes', 'No'].map((option) => {
+                    const isSelected = option === 'Yes' ? editShowOnlyLiked : !editShowOnlyLiked;
+                    const isDisabled = option === 'Yes' && favorites.size === 0;
+                    return (
+                      <Pressable
+                        key={option}
+                        style={[
+                          styles.editFaithCard,
+                          isSelected && !isDisabled && styles.editFaithCardSelected,
+                          isDisabled && { opacity: 0.7 },
+                        ]}
+                        onPress={() => {
+                          if (isDisabled) return;
+                          setEditShowOnlyLiked(option === 'Yes');
+                        }}
+                      >
+                        <Text style={styles.editFaithCardText}>{option}</Text>
+                        <View style={[styles.editRadio, isSelected && !isDisabled && styles.editRadioSelected]}>
+                          {isSelected && !isDisabled && <View style={styles.editRadioDot} />}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              )}
-              {userData.goals && (
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
-                  <Text style={styles.bulletText}>
-                    <Text style={styles.bulletLabel}>Goals: </Text>
-                    {userData.goals}
-                  </Text>
-                </View>
-              )}
-              {userData.reminder && (
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>{'\u2022'}</Text>
-                  <Text style={styles.bulletText}>
-                    <Text style={styles.bulletLabel}>Reminder: </Text>
-                    {userData.reminder.time} on{' '}
-                    {userData.reminder.days
-                      .map((on, i) => (on ? DAY_LABELS[i] : null))
-                      .filter(Boolean)
-                      .join(', ')}
-                  </Text>
-                </View>
-              )}
-              {!userData.name &&
-                !userData.faithPractice &&
-                !userData.topics?.length &&
-                !userData.goals &&
-                !userData.reminder && (
-                  <Text style={styles.emptyText}>No profile data yet.</Text>
-                )}
-            </ScrollView>
+                <Pressable
+                  style={[styles.editSaveButton, !hasEditChanged() && styles.editSaveButtonDim]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>Save</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
-
-      {/* Celebration Overlay */}
-      {showCelebration && (
-        <Animated.View entering={FadeIn.duration(1200)} style={styles.celebrationOverlay}>
-          <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
-          <Pressable
-            style={styles.celebrationTouchable}
-            onPress={() => setShowCelebration(false)}
-          >
-            <Animated.View entering={FadeIn.duration(1600).delay(400)} style={styles.celebrationContent}>
-              <Image
-                source={require('@/assets/images/dove_transparency.png')}
-                style={styles.celebrationDove}
-              />
-              <Text style={styles.celebrationTitle}>
-                You have liked 5 quotes today.
-              </Text>
-              <Text style={styles.celebrationBody}>
-                You are now closer to God, and He will help you find peace.
-              </Text>
-            </Animated.View>
-          </Pressable>
-        </Animated.View>
-      )}
 
       {/* Alarm Bottom Sheet */}
       <Modal
@@ -524,38 +644,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* Progress Pill */
-  pillRow: {
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.pillBackground,
-    borderRadius: 9999,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  pillText: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  progressTrack: {
-    width: 80,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-    backgroundColor: colors.progressFill,
-  },
-
   /* Quote Area */
   quoteArea: {
     flex: 1,
@@ -647,37 +735,131 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     marginBottom: 28,
   },
-  profileContent: {
-    flex: 1,
+  profileMenuList: {
+    gap: 12,
   },
-  bulletRow: {
+  profileMenuButton: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'center',
+    backgroundColor: '#E2DED8',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    gap: 14,
   },
-  bulletDot: {
-    fontFamily: Fonts.sans,
-    fontSize: 18,
-    color: '#1A1A1A',
-    marginRight: 10,
-    lineHeight: 24,
-  },
-  bulletText: {
-    fontFamily: Fonts.sans,
+  profileMenuLabel: {
+    fontFamily: Fonts.sansSemiBold,
     fontSize: 17,
     color: '#1A1A1A',
-    lineHeight: 24,
+  },
+  profileMenuSpacer: {
     flex: 1,
   },
-  bulletLabel: {
-    fontFamily: Fonts.sansSemiBold,
+
+  /* Edit screens inside profile */
+  editContainer: {
+    flex: 1,
   },
-  emptyText: {
+  editInner: {
+    flex: 1,
+  },
+  editInput: {
+    backgroundColor: '#E2DED8',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 16,
     fontFamily: Fonts.sans,
+    color: '#1A1A1A',
+  },
+  editInputMultiline: {
+    height: 180,
+    textAlignVertical: 'top',
+    paddingTop: 16,
+  },
+  editSaveButton: {
+    marginTop: 'auto',
+    marginBottom: 20,
+    backgroundColor: '#2C2C2C',
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  editSaveButtonDim: {
+    opacity: 0.7,
+  },
+  editSaveButtonText: {
+    fontFamily: Fonts.sansSemiBold,
     fontSize: 17,
-    color: '#6B6B6B',
-    textAlign: 'center',
-    marginTop: 40,
+    color: '#FFFFFF',
+  },
+  editBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'center',
+  },
+  editBadge: {
+    borderWidth: 1,
+    borderColor: '#D4C5A9',
+    borderRadius: 9999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  editBadgeSelected: {
+    backgroundColor: '#2C2C2C',
+    borderColor: '#2C2C2C',
+  },
+  editBadgeText: {
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    color: '#1A1A1A',
+  },
+  editBadgeTextSelected: {
+    color: '#FFFFFF',
+  },
+  editFaithOptions: {
+    gap: 12,
+  },
+  editFaithCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E8E0D0',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  editFaithCardSelected: {
+    backgroundColor: '#E8E0D0',
+    borderColor: '#2C2C2C',
+    borderWidth: 2,
+  },
+  editFaithCardText: {
+    fontFamily: Fonts.sans,
+    fontSize: 16,
+    color: '#1A1A1A',
+  },
+  editRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: '#D4C5A9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editRadioSelected: {
+    backgroundColor: '#2C2C2C',
+    borderColor: '#2C2C2C',
+  },
+  editRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
   },
 
   /* Alarm Sheet */
@@ -761,38 +943,4 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  /* Celebration Overlay */
-  celebrationOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-  },
-  celebrationTouchable: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  celebrationContent: {
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  celebrationDove: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-    marginBottom: 24,
-  },
-  celebrationTitle: {
-    fontFamily: Fonts.serif,
-    fontSize: 24,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  celebrationBody: {
-    fontFamily: Fonts.sans,
-    fontSize: 17,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
 });

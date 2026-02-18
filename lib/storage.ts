@@ -11,10 +11,8 @@ export interface UserData {
     time: string; // HH:mm format
     days: boolean[]; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
   };
-  likedQuotes?: number[]; // all-time indices of liked quotes
-  todayLikes?: number[]; // indices liked today (resets daily)
-  todayLikesDate?: string; // YYYY-MM-DD for daily reset tracking
-  celebrationShownDate?: string; // YYYY-MM-DD when celebration was last shown
+  likedQuotes?: number[]; // indices of liked quotes
+  showOnlyLiked?: boolean; // only show liked quotes
 }
 
 export async function getUserData(): Promise<UserData> {
