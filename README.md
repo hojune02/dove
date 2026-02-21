@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+# Dove: A Prayer Reminder App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full-stack iOS app built and deployed by Hojune Kim - from product design to App Store submission with in-app subscriptions
+---
 
-## Get started
+## Overview
 
-1. Install dependencies
+Dove is a daily prayer reminder application for iOS users. It contains an onboarding flow for collecting personalised information, a Bible quote reveal interaction, and a user-defined alarm reminder for prayers on chosen weekdays and time. The app provides monthly and yearly subscription with a 3-day free trial.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+**Personalised onboardings** - collects name, faith practice, interested topics, and personal goals for personalised experience of the app
+**Bible quote reveal** - handles tap-to-reveal interactions on the main prayer screen
+**In-app subscription** - provides monthly and yearly subscription with a 3-day free trial
+**Persistent user data** - stores user data locally on their devices using AsyncStorage
+---
 
-In the output, you'll find options to open the app in a
+## Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**React Native with Expo** (Expo SDK 54, TypeScript)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Expo Router** for file-based navigation
+- **RevenueCat** for subscription management and paywall configuration
+- **expo-notifications** for local push notifications when the user-set alarm is activated
+- **AsyncStorage** for on-device data persistence
+- **Expo Linear Gradient** for UI
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## End-to-End Deployment
 
-```bash
-npm run reset-project
-```
+This app is built and shipped independently by Hojune Kim.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+As of Feb 21, 2026:
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Apple Developer account setup and App Store Connect configuration (waiting for my Korean BRN) 🔄
+- Linking App Store Connect API with RevenueCat ✅
+- RevenueCat integrated with Expo for paywall rendering and entitlement management (I need my BRN to finish setting up products on App Store Connect) 🔄
+- Development build pipeline via Expo and EAS (Expo Applications Services) ✅
+- App Store submission in progress (waiting for my Korean BRN + verification) 🔄

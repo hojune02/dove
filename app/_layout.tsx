@@ -4,19 +4,21 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import {
+  CormorantGaramond_600SemiBold,
+} from '@expo-google-fonts/cormorant-garamond';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
   DMSans_600SemiBold,
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
-import {
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,6 +36,13 @@ export default function RootLayout() {
     DMSans_700Bold,
     CormorantGaramond_600SemiBold,
   });
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+      Purchases.configure({ apiKey: process.env.EXPO_PUBLIC_RC_API_KEY ?? '' });
+    }
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {
