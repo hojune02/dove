@@ -11,10 +11,14 @@ Dove is a daily prayer reminder application for iOS users. It contains an onboar
 
 ## Features
 
-**Personalised onboardings** - collects name, faith practice, interested topics, and personal goals for personalised experience of the app
-**Bible quote reveal** - handles tap-to-reveal interactions on the main prayer screen
-**In-app subscription** - provides monthly and yearly subscription with a 3-day free trial
-**Persistent user data** - stores user data locally on their devices using AsyncStorage
+**Personalised onboardings** 
+- collects name, faith practice, interested topics, and personal goals for personalised experience of the app
+**Bible quote reveal** 
+- handles tap-to-reveal interactions on the main prayer screen
+**In-app subscription** 
+- provides monthly and yearly subscription with a 3-day free trial
+**Persistent user data** 
+- stores user data locally on their devices using AsyncStorage
 ---
 
 ## Tech Stack
