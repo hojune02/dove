@@ -1,6 +1,6 @@
 # Dove: A Prayer Reminder App
 
-A full-stack iOS app built and deployed by Hojune Kim - from product design to App Store submission with in-app subscriptions
+An iOS app built and deployed by Hojune Kim - from product design to App Store submission with in-app subscriptions
 
 ---
 
