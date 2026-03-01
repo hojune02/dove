@@ -33,9 +33,9 @@ Dove is a daily prayer reminder application for iOS users. It contains an onboar
 
 This app is built and shipped independently by Hojune Kim.
 
-As of Feb 21, 2026:
+As of Mar 1, 2026:
 
-- Apple Developer account setup and App Store Connect configuration (waiting for my Korean BRN) 🔄
+- Apple Developer account setup and App Store Connect configuration (waiting for my Korean BRN) ✅
 - Linking App Store Connect API with RevenueCat ✅
 - RevenueCat integrated with Expo for paywall rendering and entitlement management (I need my BRN to finish setting up products on App Store Connect) 🔄
 - Development build pipeline via Expo and EAS (Expo Applications Services) ✅
