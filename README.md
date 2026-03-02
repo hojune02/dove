@@ -65,3 +65,7 @@ npx expo start --dev-client
 ```
 
 You may check out [`dove_final_demo.MP4`](https://youtube.com/shorts/FufcNgPuC_4?feature=share) file for a demo of this application on an iPhone device.
+
+![alt text](test_uploaded.png)
+
+After testing the app on the device, the build was then uploaded to App Store Connect as of Mar 2, 2026.
