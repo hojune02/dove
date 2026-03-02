@@ -64,4 +64,4 @@ eas build --platform ios --profile development
 npx expo start --dev-client
 ```
 
-You may check out `dove_final_demo.MP4` file for a demo of this application on an iPhone device.
+You may check out [`dove_final_demo.MP4`](/dove_final_demo.MP4) file for a demo of this application on an iPhone device.
