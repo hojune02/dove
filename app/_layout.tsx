@@ -57,7 +57,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: false }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'fade', gestureEnabled: false }}>
           <Stack.Screen name="landing" options={{ animation: 'none' }} />
           <Stack.Screen name="name-input" />
           <Stack.Screen name="faith-intro" />
