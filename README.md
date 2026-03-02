@@ -12,17 +12,22 @@ Dove is a daily prayer reminder application for iOS users. It contains an onboar
 
 ## Features
 
-**Personalised onboardings** 
+**Personalised onboardings**
+
 - collects name, faith practice, interested topics, and personal goals for personalised experience of the app
 
-**Bible quote reveal** 
+**Bible quote reveal**
+
 - handles tap-to-reveal interactions on the main prayer screen
 
-**In-app subscription** 
+**In-app subscription**
+
 - provides monthly and yearly subscription with a 3-day free trial
 
-**Persistent user data** 
+**Persistent user data**
+
 - stores user data locally on their devices using AsyncStorage
+
 ---
 
 ## Tech Stack
@@ -48,3 +53,13 @@ As of Mar 1, 2026:
 - RevenueCat integrated with Expo for paywall rendering and entitlement management (I need my BRN to finish setting up products on App Store Connect) 🔄
 - Development build pipeline via Expo and EAS (Expo Applications Services) ✅
 - App Store submission in progress (waiting for my Korean BRN + verification) 🔄
+
+## Testing the app on my iPhone using `eas build`
+
+After adding RevenueCat, it is not possible to test the Expo app on  iPhone using Expo Go. Instead of Expo Go, `eas` was used to register the phone with EAS, build the development client, and install the app on the phone:
+
+```bash
+eas device:create
+eas build --platform ios --profile development
+npx expo start --dev-client
+```
