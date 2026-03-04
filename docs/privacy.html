@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy – Dove</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-1:   #4A88C4;
+      --purple-1: #9090C0;
+      --pink-1:   #D87090;
+      --red-1:    #E85858;
+      --white:    #FFFFFF;
+      --off-white: rgba(255,255,255,0.92);
+      --muted:    rgba(255,255,255,0.65);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(160deg, var(--blue-1) 0%, var(--purple-1) 40%, var(--pink-1) 75%, var(--red-1) 100%);
+      min-height: 100vh;
+      color: var(--white);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 48px;
+      backdrop-filter: blur(12px);
+      background: rgba(74,136,196,0.20);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .nav-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--off-white);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--white); }
+    .nav-back svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .content {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 72px 24px 100px;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(42px, 7vw, 64px);
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+    .page-meta {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 56px;
+    }
+
+    .doc-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 48px;
+      backdrop-filter: blur(8px);
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      color: var(--white);
+      margin-top: 40px;
+      margin-bottom: 14px;
+    }
+    h2:first-child { margin-top: 0; }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+    ul li {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--muted);
+      padding-left: 20px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+    ul li::before {
+      content: '–';
+      position: absolute;
+      left: 0;
+      color: rgba(255,255,255,0.35);
+    }
+
+    a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover { color: var(--white); }
+
+    hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      margin: 32px 0;
+    }
+
+    strong { color: var(--off-white); font-weight: 600; }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--off-white); }
+    .footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
+    .footer-links a { font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: 13px; color: var(--muted); width: 100%; text-align: center; margin-top: 4px; }
+
+    @media (max-width: 640px) {
+      nav { padding: 20px 24px; }
+      .doc-card { padding: 28px 24px; }
+      footer { padding: 24px; flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-brand">Dove</a>
+    <a href="index.html" class="nav-back">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back
+    </a>
+  </nav>
+
+  <main class="content">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="page-meta">Dove: A Prayer Reminder App &nbsp;·&nbsp; Last updated: March 2, 2026</p>
+
+    <div class="doc-card">
+
+      <h2>Overview</h2>
+      <p>Dove ("the App") is a daily prayer reminder application for iOS. This Privacy Policy explains how we handle information in connection with your use of the App.</p>
+      <p>We are committed to protecting your privacy. This App is designed to store your personal preferences entirely on your device and does not operate a backend server or user database.</p>
+
+      <hr />
+
+      <h2>Information We Collect</h2>
+      <h3>Information Stored Locally on Your Device</h3>
+      <p>When you use the App, the following information is saved <strong>only on your device</strong> using local storage (AsyncStorage):</p>
+      <ul>
+        <li>Your first name</li>
+        <li>Your faith practice preferences</li>
+        <li>Your selected prayer topics</li>
+        <li>Your personal goals</li>
+        <li>Your alarm reminder settings (time and weekdays)</li>
+      </ul>
+      <p>This information never leaves your device and is not transmitted to us or any third party.</p>
+
+      <h3>Information Collected via Third-Party Services</h3>
+      <h3>RevenueCat</h3>
+      <p>If you choose to purchase a subscription, the App uses <strong>RevenueCat</strong> to manage in-app purchases. RevenueCat may collect:</p>
+      <ul>
+        <li>Purchase transaction history</li>
+        <li>Device identifiers</li>
+        <li>App version and platform information</li>
+      </ul>
+      <p>This data is processed by RevenueCat solely to verify and manage your subscription entitlements. RevenueCat's privacy policy is available at <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">revenuecat.com/privacy</a>.</p>
+
+      <h3>Apple</h3>
+      <p>All subscription payments are processed by Apple through the App Store. Apple's privacy policy governs how they handle your payment and account information. We do not have access to your payment details.</p>
+
+      <hr />
+
+      <h2>Notifications</h2>
+      <p>The App may send local push notifications to remind you of your prayer times. These notifications are generated entirely on your device and do not involve any external servers or data transmission.</p>
+
+      <hr />
+
+      <h2>Data Sharing</h2>
+      <p>We do not sell, trade, or share your personal information with third parties, except as described under RevenueCat and Apple above, which are necessary solely for subscription processing.</p>
+
+      <hr />
+
+      <h2>Data Retention and Deletion</h2>
+      <p>All locally stored data (name, preferences, alarm settings) can be deleted at any time by uninstalling the App from your device. Uninstalling the App permanently removes all locally stored data.</p>
+
+      <hr />
+
+      <h2>Children's Privacy</h2>
+      <p>The App is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13.</p>
+
+      <hr />
+
+      <h2>Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. Any changes will be reflected by updating the "Last updated" date at the top of this page. Continued use of the App after any changes constitutes your acceptance of the updated policy.</p>
+
+      <hr />
+
+      <h2>Contact</h2>
+      <p><strong>Hojune Kim</strong><br />
+      <a href="mailto:hojunekim1202@gmail.com">hojunekim1202@gmail.com</a></p>
+
+    </div>
+  </main>
+
+  <footer>
+    <span class="footer-brand">Dove</span>
+    <ul class="footer-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms &amp; Conditions</a></li>
+    </ul>
+    <p class="footer-copy">&copy; 2026 Hojune Kim. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

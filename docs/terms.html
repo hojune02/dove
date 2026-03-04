@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms &amp; Conditions – Dove</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-1:   #4A88C4;
+      --purple-1: #9090C0;
+      --pink-1:   #D87090;
+      --red-1:    #E85858;
+      --white:    #FFFFFF;
+      --off-white: rgba(255,255,255,0.92);
+      --muted:    rgba(255,255,255,0.65);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(160deg, var(--blue-1) 0%, var(--purple-1) 40%, var(--pink-1) 75%, var(--red-1) 100%);
+      min-height: 100vh;
+      color: var(--white);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 48px;
+      backdrop-filter: blur(12px);
+      background: rgba(74,136,196,0.20);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .nav-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--off-white);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--white); }
+    .nav-back svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .content {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 72px 24px 100px;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(42px, 7vw, 64px);
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+    .page-meta {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 56px;
+    }
+
+    .doc-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 48px;
+      backdrop-filter: blur(8px);
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      color: var(--white);
+      margin-top: 40px;
+      margin-bottom: 14px;
+    }
+    h2:first-child { margin-top: 0; }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+    ul li {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--muted);
+      padding-left: 20px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+    ul li::before {
+      content: '–';
+      position: absolute;
+      left: 0;
+      color: rgba(255,255,255,0.35);
+    }
+
+    a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover { color: var(--white); }
+
+    hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      margin: 32px 0;
+    }
+
+    strong { color: var(--off-white); font-weight: 600; }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--off-white); }
+    .footer-links { display: flex; gap: 24px; list-style: none; flex-wrap: wrap; }
+    .footer-links a { font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: 13px; color: var(--muted); width: 100%; text-align: center; margin-top: 4px; }
+
+    @media (max-width: 640px) {
+      nav { padding: 20px 24px; }
+      .doc-card { padding: 28px 24px; }
+      footer { padding: 24px; flex-direction: column; align-items: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-brand">Dove</a>
+    <a href="index.html" class="nav-back">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back
+    </a>
+  </nav>
+
+  <main class="content">
+    <h1 class="page-title">Terms &amp; Conditions</h1>
+    <p class="page-meta">Dove: A Prayer Reminder App &nbsp;·&nbsp; Last updated: March 4, 2026</p>
+
+    <div class="doc-card">
+
+      <h2>Agreement to Terms</h2>
+      <p>By downloading, installing, or using Dove ("the App"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, do not use the App.</p>
+
+      <hr />
+
+      <h2>Use of the App</h2>
+      <p>Dove is a personal prayer and spiritual reflection application for iOS. You may use the App solely for your own personal, non-commercial purposes. You agree not to:</p>
+      <ul>
+        <li>Reverse engineer, decompile, or disassemble any part of the App</li>
+        <li>Copy, redistribute, or resell the App or any of its content</li>
+        <li>Use the App in any way that violates applicable laws or regulations</li>
+        <li>Attempt to gain unauthorised access to any systems or networks connected to the App</li>
+      </ul>
+
+      <hr />
+
+      <h2>Subscriptions and In-App Purchases</h2>
+      <p>Dove offers an optional subscription to access premium features. By subscribing, you agree to the following:</p>
+
+      <h3>Subscription Terms</h3>
+      <ul>
+        <li>Subscriptions are billed on a recurring basis (monthly or annually, depending on the plan selected) through your Apple App Store account.</li>
+        <li>Payment is charged to your Apple ID account at confirmation of purchase.</li>
+        <li>Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current billing period.</li>
+        <li>Your account will be charged for renewal within 24 hours prior to the end of the current period.</li>
+      </ul>
+
+      <h3>Cancellation</h3>
+      <p>You may cancel your subscription at any time through your Apple ID Account Settings. Cancellation takes effect at the end of the current billing cycle. No refunds are provided for unused portions of a subscription period.</p>
+
+      <h3>Free Trial</h3>
+      <p>If a free trial is offered, it will automatically convert to a paid subscription at the end of the trial period unless cancelled beforehand. You will not be charged during the free trial period.</p>
+
+      <h3>Refunds</h3>
+      <p>All purchases are final. Refund requests must be directed to Apple in accordance with their refund policy. We do not control Apple's refund decisions.</p>
+
+      <hr />
+
+      <h2>Intellectual Property</h2>
+      <p>All content within the App — including but not limited to prayer texts, quotes, scripture references, graphics, and user interface design — is owned by or licensed to the developer and is protected by applicable intellectual property laws. You may not reproduce or distribute this content without prior written permission.</p>
+
+      <hr />
+
+      <h2>Disclaimer of Warranties</h2>
+      <p>The App is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not warrant that:</p>
+      <ul>
+        <li>The App will be uninterrupted or error-free</li>
+        <li>Any errors in the App will be corrected</li>
+        <li>The App will meet your requirements or expectations</li>
+      </ul>
+
+      <hr />
+
+      <h2>Limitation of Liability</h2>
+      <p>To the fullest extent permitted by applicable law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of, or inability to use, the App, even if we have been advised of the possibility of such damages.</p>
+      <p>Our total liability to you for all claims arising out of or relating to these Terms or the App shall not exceed the amount you paid for the App in the twelve (12) months preceding the claim.</p>
+
+      <hr />
+
+      <h2>Governing Law</h2>
+      <p>These Terms are governed by and construed in accordance with the laws of the Republic of Korea, without regard to its conflict of law provisions.</p>
+
+      <hr />
+
+      <h2>Changes to These Terms</h2>
+      <p>We reserve the right to modify these Terms at any time. Changes will be effective upon posting the updated Terms. Your continued use of the App after changes are posted constitutes your acceptance of the revised Terms.</p>
+
+      <hr />
+
+      <h2>Contact</h2>
+      <p><strong>Hojune Kim</strong><br />
+      <a href="mailto:hojunekim1202@gmail.com">hojunekim1202@gmail.com</a></p>
+
+    </div>
+  </main>
+
+  <footer>
+    <span class="footer-brand">Dove</span>
+    <ul class="footer-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms &amp; Conditions</a></li>
+    </ul>
+    <p class="footer-copy">&copy; 2026 Hojune Kim. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
