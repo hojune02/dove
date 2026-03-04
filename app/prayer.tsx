@@ -51,6 +51,9 @@ export default function PrayerScreen() {
   // Load persisted liked quotes and preferences on mount
   useEffect(() => {
     getUserData().then((data) => {
+      if (!data.onboardingComplete) {
+        saveUserData({ onboardingComplete: true });
+      }
       if (data.likedQuotes && data.likedQuotes.length > 0) {
         setFavorites(new Set(data.likedQuotes));
       }

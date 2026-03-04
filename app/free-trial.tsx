@@ -1,6 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import RevenueCatUI from 'react-native-purchases-ui';
+import { saveUserData } from '@/lib/storage';
+
+async function completeOnboarding(router: ReturnType<typeof useRouter>) {
+  await saveUserData({ onboardingComplete: true });
+  router.replace('/prayer');
+}
 
 export default function FreeTrialScreen() {
   const router = useRouter();
@@ -8,9 +14,9 @@ export default function FreeTrialScreen() {
   return (
     <View style={styles.container}>
       <RevenueCatUI.Paywall
-        onPurchaseCompleted={() => router.replace('/prayer')}
-        onRestoreCompleted={() => router.replace('/prayer')}
-        onDismiss={() => {}}
+        onPurchaseCompleted={() => completeOnboarding(router)}
+        onRestoreCompleted={() => completeOnboarding(router)}
+        onDismiss={() => router.back()}
       />
     </View>
   );

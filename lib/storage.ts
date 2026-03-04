@@ -13,6 +13,7 @@ export interface UserData {
   };
   likedQuotes?: number[]; // indices of liked quotes
   showOnlyLiked?: boolean; // only show liked quotes
+  onboardingComplete?: boolean;
 }
 
 export async function getUserData(): Promise<UserData> {
